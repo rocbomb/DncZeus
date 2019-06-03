@@ -29,7 +29,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
-
+using MySql.Data.MySqlClient;
+using Dapper;
+using DncZeus.Api.DbConfig;
 
 namespace DncZeus.Api
 {
@@ -48,6 +50,7 @@ namespace DncZeus.Api
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
+            //跨域请求
             services.AddCors(o =>
                 o.AddPolicy("*",
                     builder => builder
@@ -56,6 +59,7 @@ namespace DncZeus.Api
                         .AllowAnyOrigin()
                         .AllowCredentials()
                 ));
+
             services.AddMemoryCache();
             services.AddHttpContextAccessor();
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
@@ -65,11 +69,14 @@ namespace DncZeus.Api
             var appSettings = appSettingsSection.Get<AppAuthenticationSettings>();
             services.AddJwtBearerAuthentication(appSettings);
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
+
             services.AddAutoMapper();
 
             services.Configure<WebEncoderOptions>(options =>
                 options.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.BasicLatin, UnicodeRanges.CjkUnifiedIdeographs)
             );
+
+            services.AddTransient<IProductRepository, ProductRepository>();
 
             services
                 .AddMvc(config =>
@@ -80,13 +87,16 @@ namespace DncZeus.Api
                 {
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                 })
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            /*
             services.AddDbContext<DncZeusDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
                 // 如果使用SQL Server 2008数据库，请添加UseRowNumberForPaging的选项
                 // 参考资料:https://github.com/aspnet/EntityFrameworkCore/issues/4616
                 //options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),b=>b.UseRowNumberForPaging())
                 );
+                */
 
             services.AddSwaggerGen(c =>
             {
@@ -102,6 +112,14 @@ namespace DncZeus.Api
             {
                 config.AddLog4Net();
             });
+
+            DncZeus.Api.DbConfig.DBConfig.DefaultSqlConnectionString = Configuration.GetConnectionString("MySqlConnection");
+            ProductRepository xx = new ProductRepository();
+            var xxx = xx.GetAll();
+            foreach(var data in xxx)
+            {
+                Console.WriteLine(data.Name);
+            }
         }
 
         /// <summary>

@@ -5,6 +5,7 @@
  * 版权所有，请勿删除
  ******************************************/
 
+using DncZeus.Api.DbConfig;
 using DncZeus.Api.Entities;
 using DncZeus.Api.Extensions;
 using DncZeus.Api.Extensions.AuthContext;
